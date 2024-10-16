@@ -179,11 +179,31 @@ async function activateXR() {
       background-color: #3e8e41;
       box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
     }
+    #intro-image {
+            width: 60%;
+            max-width: 600px;
+    }
+    #intro-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+    }
   </style>
 </head>
 <body>
 
-<button onclick="activateXR()">Start AR Experience</button>
+<div id="intro-overlay">
+    <img id="intro-image" src="WebD_texture.jpg" alt="WebD">
+    <button id="start-button" onclick="activateXR()">Start AR Experience</button>
+  </div>
 
 <script>
 async function activateXR() {
@@ -244,7 +264,7 @@ async function activateXR() {
 
   loader.load('penguin.glb', (gltf) => {
     model = gltf.scene;
-    model.scale.set(0.4, 0.4, 0.4);  // Adjust scale if needed
+    model.scale.set(1.2, 1.2, 1.2);  // Adjust scale if needed
     model.visible = false;  // Start invisible until we place it
     scene.add(model);
   });
