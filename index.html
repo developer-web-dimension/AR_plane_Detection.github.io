@@ -51,10 +51,13 @@ async function activateXR() {
   reticle.visible = false;
   scene.add(reticle);
 
+  const textureLoader = new THREE.TextureLoader();
+  const cubeTexture = textureLoader.load('WebD_texture.jpg'); 
+
   session.addEventListener("select", (event) => {
     const cube = new THREE.Mesh(
       new THREE.BoxBufferGeometry(0.2, 0.2, 0.2),
-      new THREE.MeshBasicMaterial({color: 0xff0000})
+      new THREE.MeshBasicMaterial({map: cubeTexture})
     );
     cube.position.copy(reticle.position);
     scene.add(cube);
