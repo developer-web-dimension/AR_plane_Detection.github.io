@@ -424,7 +424,7 @@ async function activateXR() {
 
   loader.load('penguin.glb', (gltf) => {
     const model = gltf.scene;
-    model.scale.set(2, 2, 2);  
+    model.scale.set(1, 1, 1);  
     model.visible = false;  
     models.push(model);  // Add to models array
     scene.add(model);
@@ -433,7 +433,7 @@ async function activateXR() {
   session.addEventListener("select", (event) => {
     loader.load('penguin.glb', (gltf) => {
       const newModel = gltf.scene.clone();  // Clone the model for multiple instances
-      newModel.scale.set(2, 2, 2);  
+      newModel.scale.set(1, 1, 1);  
       newModel.position.copy(reticle.position);
       newModel.visible = true;
       models.push(newModel);  // Add to the array
