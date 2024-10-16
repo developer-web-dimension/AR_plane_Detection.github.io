@@ -136,7 +136,7 @@ async function activateXR() {
 
 
 
-<!-- <!doctype html>
+<!doctype html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -212,9 +212,17 @@ async function activateXR() {
   const gl = canvas.getContext("webgl", {xrCompatible: true});
 
   const scene = new THREE.Scene();
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+   // Add Directional Light with Shadows
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
   directionalLight.position.set(1, 1, 1).normalize();
+  directionalLight.castShadow = true;  // Enable shadow casting for the light
+  directionalLight.shadow.mapSize.width = 1024; // Shadow quality
+  directionalLight.shadow.mapSize.height = 1024;
   scene.add(directionalLight);
+
+    // Add Ambient Light for basic illumination
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.5); // Soft light
+  scene.add(ambientLight)
 
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
@@ -223,6 +231,7 @@ async function activateXR() {
     context: gl
   });
   renderer.autoClear = false;
+  renderer.shadowMap.enabled = true; 
 
   const camera = new THREE.PerspectiveCamera();
   camera.matrixAutoUpdate = false;
@@ -269,6 +278,14 @@ async function activateXR() {
     scene.add(model);
   });
 
+
+  const planeGeometry = new THREE.PlaneGeometry(10, 10);
+  const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.8 });
+  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  plane.rotation.x = -Math.PI / 2;
+  plane.receiveShadow = true;  // Enable receiving shadows
+  plane.position.y = reticle.position.y - 0.1;  // Just below the reticle
+  scene.add(plane);
 
   session.addEventListener("select", (event) => {
     if (model) {
@@ -325,204 +342,6 @@ async function activateXR() {
 </script>
 </body>
 </html>
- -->
-
-
-
-<!doctype html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <title>WebXR Cube AR</title>
- 
-  <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
-  <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
-
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
-    }
-
-    button {
-      padding: 15px 30px;
-      font-size: 18px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: background-color 0.3s, box-shadow 0.3s;
-    }
-
-    button:hover {
-      background-color: #45a049;
-      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    button:active {
-      background-color: #3e8e41;
-      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
-    }
-
-    #intro-image {
-      width: 60%;
-      max-width: 600px;
-    }
-
-    #intro-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: white;
-      z-index: 3;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-  </style>
-</head>
-<body>
-
-<div id="intro-overlay">
-    <img id="intro-image" src="WebD_texture.jpg" alt="WebD">
-    <button id="start-button" onclick="activateXR()">Start AR Experience</button>
-</div>
-
-<script>
-async function activateXR() {
-  const canvas = document.createElement("canvas");
-  document.body.appendChild(canvas);
-  const gl = canvas.getContext("webgl", {xrCompatible: true});
-
-  const scene = new THREE.Scene();
-
-  // Add Directional Light with Shadows
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(1, 1, 1).normalize();
-  directionalLight.castShadow = true;  // Enable shadow casting for the light
-  directionalLight.shadow.mapSize.width = 1024; // Shadow quality
-  directionalLight.shadow.mapSize.height = 1024;
-  scene.add(directionalLight);
-
-  // Add Ambient Light for basic illumination
-  const ambientLight = new THREE.AmbientLight(0x404040, 1.5); // Soft light
-  scene.add(ambientLight);
-
-  // Enable shadow rendering
-  const renderer = new THREE.WebGLRenderer({
-    alpha: true,
-    preserveDrawingBuffer: true,
-    canvas: canvas,
-    context: gl
-  });
-  renderer.autoClear = false;
-  renderer.shadowMap.enabled = true; // Enable shadows
-
-  const camera = new THREE.PerspectiveCamera();
-  camera.matrixAutoUpdate = false;
-
-  const session = await navigator.xr.requestSession("immersive-ar", {requiredFeatures: ['hit-test']});
-  session.updateRenderState({
-    baseLayer: new XRWebGLLayer(session, gl)
-  });
-
-  const referenceSpace = await session.requestReferenceSpace('local');
-  const viewerSpace = await session.requestReferenceSpace('viewer');
-  const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
-
-  let reticle = new THREE.Mesh(
-    new THREE.RingGeometry(0.05, 0.1, 32),
-    new THREE.MeshBasicMaterial({ color: 0x00ffff })
-  );
-  reticle.rotation.x = -Math.PI / 2;
-  reticle.visible = false;
-  scene.add(reticle);
-
-  const loader = new THREE.GLTFLoader();
-  let model;
-  let animationStartTime = null;
-  const animationDuration = 1000;
-
-  loader.load('penguin.glb', (gltf) => {
-    model = gltf.scene;
-    model.scale.set(1.5, 1.5, 1.5);
-    model.castShadow = true;  // Enable shadows for the model
-    model.visible = false;
-    scene.add(model);
-  });
-
-  // Optional: Add a plane to receive shadows
-  const planeGeometry = new THREE.PlaneGeometry(10, 10);
-  const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.8 });
-  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-  plane.rotation.x = -Math.PI / 2;
-  plane.receiveShadow = true;  // Enable receiving shadows
-  plane.position.y = reticle.position.y - 0.1;  // Just below the reticle
-  scene.add(plane);
-
-  session.addEventListener("select", (event) => {
-    if (model) {
-      model.position.copy(reticle.position);
-      model.visible = true;
-      animationStartTime = performance.now();
-    }
-  });
-
-  const onXRFrame = (time, frame) => {
-    session.requestAnimationFrame(onXRFrame);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
-
-    const pose = frame.getViewerPose(referenceSpace);
-    if (pose) {
-      const view = pose.views[0];
-      const viewport = session.renderState.baseLayer.getViewport(view);
-      renderer.setSize(viewport.width, viewport.height);
-      camera.matrix.fromArray(view.transform.matrix);
-      camera.projectionMatrix.fromArray(view.projectionMatrix);
-      camera.updateMatrixWorld(true);
-
-      const hitTestResults = frame.getHitTestResults(hitTestSource);
-      if (hitTestResults.length > 0) {
-        const hitPose = hitTestResults[0].getPose(referenceSpace);
-        reticle.visible = true;
-        reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
-        reticle.updateMatrixWorld(true);
-      }
-
-      if (model && animationStartTime !== null) {
-        const elapsedTime = performance.now() - animationStartTime;
-        if (elapsedTime < animationDuration) {
-          const progress = elapsedTime / animationDuration;
-          const popHeight = Math.sin(progress * Math.PI);
-          model.position.y = reticle.position.y + popHeight * 0.3;
-        } else {
-          model.position.y = reticle.position.y;
-          animationStartTime = null;
-        }
-      }
-
-      renderer.render(scene, camera);
-    }
-  };
-
-  session.requestAnimationFrame(onXRFrame);
-}
-</script>
-</body>
-</html>
-
 
 
 
