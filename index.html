@@ -318,7 +318,6 @@ async function activateXR() {
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <title>WebXR Cube AR</title>
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
-
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <style>
@@ -399,25 +398,19 @@ async function activateXR() {
   scene.add(reticle);
 
   const loader = new THREE.GLTFLoader();
-  let model;
+  let models = [];  // Array to store all models
   let animationStartTime = null;
   const animationDuration = 800;
 
   loader.load('penguin.glb', (gltf) => {
-    model = gltf.scene;
-    model.scale.set(2, 2, 2);  // Adjust scale if needed
-    model.visible = false;  // Start invisible until we place it
+    const model = gltf.scene;
+    model.scale.set(2, 2, 2);  
+    model.visible = false;  
+    models.push(model);  // Add to models array
     scene.add(model);
   });
 
-
   session.addEventListener("select", (event) => {
-    // if (model) {
-    //   model.position.copy(reticle.position);
-    //   model.visible = true;
-    //   animationStartTime = performance.now();
-    // }
-
     loader.load('penguin.glb', (gltf) => {
       const newModel = gltf.scene.clone();  // Clone the model for multiple instances
       newModel.scale.set(2, 2, 2);  
@@ -451,19 +444,6 @@ async function activateXR() {
         reticle.updateMatrixWorld(true);
       }
 
-      // if (model && animationStartTime !== null) {
-      //   const elapsedTime = performance.now() - animationStartTime;
-      //   if (elapsedTime < animationDuration) {
-      //     // Animate "pop-up" effect
-      //     const progress = elapsedTime / animationDuration;
-      //     const popHeight = Math.sin(progress * Math.PI);  
-      //     model.position.y = reticle.position.y + popHeight * 0.1;  
-      //   } else {
-      //     model.position.y = reticle.position.y;
-      //     animationStartTime = null;  // Stop animation after it's done
-      //   }
-      // }
-
       models.forEach(model => {
         if (animationStartTime !== null) {
           const elapsedTime = performance.now() - animationStartTime;
@@ -481,10 +461,9 @@ async function activateXR() {
       renderer.render(scene, camera);
     }
   };
-  
+
   session.requestAnimationFrame(onXRFrame);
 }
-
 </script>
 </body>
 </html>
